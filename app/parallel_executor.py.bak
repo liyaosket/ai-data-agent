@@ -1,0 +1,124 @@
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+from context_manager import ContextManager
+from task_runner import TaskRunner
+
+
+class ParallelExecutor:
+    def __init__(self, max_workers: int = 3):
+        self.context_manager = ContextManager()
+        self.task_runner = TaskRunner()
+        self.max_workers = max_workers
+
+    def execute_task(self, task: dict):
+        task_id = task["id"]
+
+        dependencies = task.get("dependencies", [])
+
+        context = self.context_manager.build_context(
+            dependencies
+        )
+
+        print(f"\n[Executor] 开始任务: {task_id}")
+        print(f"[Executor] Dependencies: {dependencies}")
+
+        result = self.task_runner.run_task(
+            task,
+            context,
+        )
+
+        return task_id, result
+
+    def run_plan(self, plan: dict):
+        tasks = {
+            task["id"]: task
+            for task in plan["tasks"]
+        }
+
+        completed = set()
+
+        while len(completed) < len(tasks):
+
+            ready_tasks = []
+
+            for task_id, task in tasks.items():
+
+                if task_id in completed:
+                    continue
+
+                dependencies = task.get(
+                    "dependencies",
+                    []
+                )
+
+                if all(
+                    dependency in completed
+                    for dependency in dependencies
+                ):
+                    ready_tasks.append(task)
+
+            if not ready_tasks:
+                remaining = [
+                    task_id
+                    for task_id in tasks
+                    if task_id not in completed
+                ]
+
+                raise RuntimeError(
+                    "DAG 无法继续执行，"
+                    f"可能存在循环依赖: {remaining}"
+                )
+
+            print("\n========== READY TASKS ==========")
+
+            for task in ready_tasks:
+                print(
+                    f"- {task['id']}: "
+                    f"{task['description']}"
+                )
+
+            with ThreadPoolExecutor(
+                max_workers=self.max_workers
+            ) as executor:
+
+                future_map = {
+                    executor.submit(
+                        self.execute_task,
+                        task,
+                    ): task
+                    for task in ready_tasks
+                }
+
+                for future in as_completed(
+                    future_map
+                ):
+                    task = future_map[future]
+                    task_id = task["id"]
+
+                    try:
+                        finished_task_id, result = (
+                            future.result()
+                        )
+
+                        self.context_manager.save_task_result(
+                            finished_task_id,
+                            result,
+                        )
+
+                        completed.add(
+                            finished_task_id
+                        )
+
+                        print(
+                            f"\n[Executor] "
+                            f"任务完成: {finished_task_id}"
+                        )
+
+                    except Exception as e:
+                        print(
+                            f"\n[Executor] "
+                            f"任务失败: {task_id}"
+                        )
+                        raise e
+
+        return self.context_manager.get_all_results()

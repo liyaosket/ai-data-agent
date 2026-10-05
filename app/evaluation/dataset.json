@@ -1,0 +1,20 @@
+[
+  {
+    "query": "Kafka consumer 如何保存和提交 offset？",
+    "relevant_documents": [
+      515
+    ]
+  },
+  {
+    "query": "Kafka 手动提交 offset 有什么作用？",
+    "relevant_documents": [
+      515
+    ]
+  },
+  {
+    "query": "Consumer Group 如何管理消费进度？",
+    "relevant_documents": [
+      515
+    ]
+  }
+]

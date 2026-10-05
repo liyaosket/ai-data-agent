@@ -1,0 +1,16 @@
+[
+  {
+    "timestamp": "2026-10-02T13:42:41.030703",
+    "metrics": {
+      "tasks": {
+        "total": 10,
+        "success": 9,
+        "failed": 1
+      },
+      "llm": {
+        "calls": 20,
+        "cost": 0.5
+      }
+    }
+  }
+]

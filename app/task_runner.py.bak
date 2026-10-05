@@ -1,0 +1,94 @@
+import json
+
+from task_agent import create_task_agent_response
+from tools.router import execute_tool
+
+
+class TaskRunner:
+    def __init__(self):
+        pass
+
+
+    def run_task(
+        self,
+        task: dict,
+        context: dict,
+    ):
+        input_items = [
+            {
+                "role": "user",
+                "content": json.dumps(
+                    {
+                        "task": task,
+                        "context": context,
+                    },
+                    ensure_ascii=False,
+                ),
+            }
+        ]
+
+        tool_results = []
+
+        while True:
+            response = create_task_agent_response(
+                input_items
+            )
+
+            tool_calls = [
+                item
+                for item in response.output
+                if item.type == "function_call"
+            ]
+
+            if not tool_calls:
+                return {
+                    "success": True,
+                    "task_id": task["id"],
+                    "answer": response.output_text,
+                    "tool_results": tool_results,
+                }
+
+            input_items += response.output
+
+            for tool_call in tool_calls:
+                print(
+                    f"\n[TaskRunner] Tool: "
+                    f"{tool_call.name}"
+                )
+
+                arguments = json.loads(
+                    tool_call.arguments
+                )
+
+                print(
+                    f"[TaskRunner] Arguments: "
+                    f"{arguments}"
+                )
+
+                result = execute_tool(
+                    tool_call.name,
+                    arguments,
+                )
+
+                tool_results.append({
+                    "tool": tool_call.name,
+                    "arguments": arguments,
+                    "result": result,
+                })
+
+                print(
+                    f"[TaskRunner] Tool Result: "
+                    f"{result}"
+                )
+
+                input_items.append(
+                    {
+                        "type": "function_call_output",
+                        "call_id": tool_call.call_id,
+                        "output": json.dumps(
+                            result,
+                            ensure_ascii=False,
+                            default=str,
+                        ),
+                    }
+                )
