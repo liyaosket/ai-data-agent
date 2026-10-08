@@ -1,16 +1,18 @@
-from typing import TypedDict, Any
+from typing import Any, TypedDict
 
-from langgraph.graph import StateGraph, START, END
+from langgraph.graph import END, START, StateGraph
 
 from app.agent.llm_router import LLMRouter
-from app.planner import create_plan
 from app.agent.router import RouteDecision
-from app.task_runner import TaskRunner
-from app.result_store import ResultStore
-from app.metrics_registry import get_metrics
 from app.langgraph_demo.dag_scheduler import get_ready_tasks
-from .parallel_executor import execute_tasks_parallel
+from app.metrics_registry import get_metrics
+from app.planner import create_plan
+from app.result_store import ResultStore
+from app.task_runner import TaskRunner
+
 from .dag_scheduler import get_ready_tasks
+from .parallel_executor import execute_tasks_parallel
+
 
 class AgentState(TypedDict, total=False):
     # 用户输入

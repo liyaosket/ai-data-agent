@@ -7,7 +7,6 @@ from openai import OpenAI
 from app.agent.router import RouteDecision
 from app.agent.router_schema import ROUTER_SCHEMA
 
-
 load_dotenv()
 
 

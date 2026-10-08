@@ -7,6 +7,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
+
 class QwenEmbeddingModel(EmbeddingModel):
 
     def __init__(
@@ -76,3 +78,4 @@ class QwenEmbeddingModel(EmbeddingModel):
             item.embedding
             for item in response.data
         ]
+
